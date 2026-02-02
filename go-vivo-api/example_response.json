@@ -1,0 +1,32 @@
+{
+    "retcode": 0,
+    "data": {
+        "productSlogan2": "专业修图神器，最强拍照技巧",
+        "productSlogan1": "做生活的艺术家",
+        "productName": "vivo摄影",
+        "requestTime": 1770014043364,
+        "pageTrackSwitch": "on",
+        "pageTrackUrl": "https://sthf.vivo.com.cn/h5/click",
+        "downloadH5Url": "https://h5coml.vivo.com.cn/h5coml/appdetail_h5/browser_v2/index.html?appId=1959698&resource=301&source=7",
+        "downloadUrl": "http://info.appstore.vivo.com.cn/dl/STVhek9UWUQyVjg9?source=7",
+        "vivoDownLoadUrl": "vivomarket://details?id=com.vivo.symmetry",
+        "linkFlag": 0,
+        "post": {
+            "postId": 291220904755,
+            "userId": 599660628355,
+            "userNick": "集家嘴 de 吖",
+            "userHeadUrl": "https://gallerystatic.vivo.com.cn/HOPcey2rug8vvl0V/20240416/feee19d26cc6b5f87d46c99a2a961ffa.jpg",
+            "signature": "手机摄影是简单的表达式。",
+            "vFlag": 0,
+            "talentFlag": 0,
+            "images": [
+                "https://gallerystatic.vivo.com.cn/HOPcey2rug8vvl0V/imgprocess/20250818/7ff06aef-198c-4856-a1fd-7e9d87b03abb.jpg"
+            ],
+            "likeCount": 13,
+            "commentCount": 0,
+            "viewCount": 224,
+            "shareImageUrl": "https://gallerystatic.vivo.com.cn/HOPcey2rug8vvl0V/imgprocess/20250818/28b0783d-7a95-4d68-b313-fd2164c8b46a.jpg",
+            "postType": 1
+        }
+    }
+}

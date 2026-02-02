@@ -34,6 +34,12 @@ func NewVivoCrawler(userID string, db *DB) *VivoCrawler {
 	}
 }
 
+// PostInfo 包含帖子ID和封面图URL
+type PostInfo struct {
+	ID       string
+	CoverURL string
+}
+
 // 主同步逻辑
 func (c *VivoCrawler) Sync() error {
 	log.Println("🔄 开始同步 vivo 相册...")
@@ -45,38 +51,38 @@ func (c *VivoCrawler) Sync() error {
 		return fmt.Errorf("获取已有数据失败: %w", err)
 	}
 
-	// 获取所有帖子ID
-	postIDs, err := c.fetchPostIDs()
+	// 获取所有帖子信息（包含封面图）
+	postInfos, err := c.fetchPostInfos()
 	if err != nil {
 		return fmt.Errorf("获取帖子列表失败: %w", err)
 	}
 
-	log.Printf("📊 发现 %d 个帖子，已有 %d 个", len(postIDs), len(existing))
+	log.Printf("📊 发现 %d 个帖子，已有 %d 个", len(postInfos), len(existing))
 
 	// 过滤出新帖子
-	var newIDs []string
-	for _, id := range postIDs {
-		if !existing[id] {
-			newIDs = append(newIDs, id)
+	var newPosts []PostInfo
+	for _, info := range postInfos {
+		if !existing[info.ID] {
+			newPosts = append(newPosts, info)
 		}
 	}
 
-	if len(newIDs) == 0 {
+	if len(newPosts) == 0 {
 		log.Println("✅ 没有新数据需要同步")
 		return nil
 	}
 
-	log.Printf("🆕 需要同步 %d 个新帖子", len(newIDs))
+	log.Printf("🆕 需要同步 %d 个新帖子", len(newPosts))
 
 	// 获取详情并保存
 	success := 0
-	for i, id := range newIDs {
-		post, err := c.fetchPostDetail(id)
+	for i, info := range newPosts {
+		post, err := c.fetchPostDetail(info.ID)
 		if err != nil {
-			log.Printf("❌ 获取帖子 %s 失败: %v", id, err)
+			log.Printf("❌ 获取帖子 %s 失败: %v", info.ID, err)
 			continue
 		}
-	
+
 		// 转换并保存
 		dbPost := &Post{
 			ID:          post.PostID.String(),
@@ -84,6 +90,7 @@ func (c *VivoCrawler) Sync() error {
 			Description: post.Desc,
 			UserNick:    post.UserNick,
 			Signature:   post.Signature,
+			CoverURL:    info.CoverURL,
 		}
 
 		if err := c.db.SavePost(dbPost, post.Images); err != nil {
@@ -95,30 +102,30 @@ func (c *VivoCrawler) Sync() error {
 		time.Sleep(500 * time.Millisecond) // 限速，避免请求过快
 
 		if (i+1)%10 == 0 {
-			log.Printf("📈 进度: %d/%d", i+1, len(newIDs))
+			log.Printf("📈 进度: %d/%d", i+1, len(newPosts))
 		}
 	}
 
 	elapsed := time.Since(start)
-	log.Printf("✅ 同步完成: 成功 %d/%d, 耗时 %v", success, len(newIDs), elapsed)
+	log.Printf("✅ 同步完成: 成功 %d/%d, 耗时 %v", success, len(newPosts), elapsed)
 	return nil
 }
 
 // 获取帖子列表（分页获取所有）
-func (c *VivoCrawler) fetchPostIDs() ([]string, error) {
-	var allIDs []string
+func (c *VivoCrawler) fetchPostInfos() ([]PostInfo, error) {
+	var allPosts []PostInfo
 	pageNo := 1
 
 	for {
-		ids, hasMore, err := c.fetchPage(pageNo)
+		posts, hasMore, err := c.fetchPage(pageNo)
 		if err != nil {
 			return nil, err
 		}
 
-		allIDs = append(allIDs, ids...)
-		log.Printf("📄 第 %d 页: %d 个帖子", pageNo, len(ids))
+		allPosts = append(allPosts, posts...)
+		log.Printf("📄 第 %d 页: %d 个帖子", pageNo, len(posts))
 
-		if !hasMore || len(ids) == 0 {
+		if !hasMore || len(posts) == 0 {
 			break
 		}
 
@@ -126,13 +133,13 @@ func (c *VivoCrawler) fetchPostIDs() ([]string, error) {
 		time.Sleep(200 * time.Millisecond)
 	}
 
-	return allIDs, nil
+	return allPosts, nil
 }
 
 // 获取单页帖子
-func (c *VivoCrawler) fetchPage(pageNo int) ([]string, bool, error) {
+func (c *VivoCrawler) fetchPage(pageNo int) ([]PostInfo, bool, error) {
 	url := fmt.Sprintf("https://gallery.vivo.com.cn/gallery/wap/share/user/post/list/%s.do", c.userID)
-	
+
 	timestamp := time.Now().UnixMilli()
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -162,6 +169,9 @@ func (c *VivoCrawler) fetchPage(pageNo int) ([]string, bool, error) {
 		Data struct {
 			Posts []struct {
 				PostID json.Number `json:"postId"`
+				Image  struct {
+					URL string `json:"url"`
+				} `json:"image"`
 			} `json:"posts"`
 		} `json:"data"`
 	}
@@ -170,13 +180,16 @@ func (c *VivoCrawler) fetchPage(pageNo int) ([]string, bool, error) {
 		return nil, false, fmt.Errorf("解析失败: %w", err)
 	}
 
-	var ids []string
+	var posts []PostInfo
 	for _, p := range result.Data.Posts {
-		ids = append(ids, p.PostID.String())
+		posts = append(posts, PostInfo{
+			ID:       p.PostID.String(),
+			CoverURL: p.Image.URL,
+		})
 	}
 
-	hasMore := len(ids) > 0
-	return ids, hasMore, nil
+	hasMore := len(posts) > 0
+	return posts, hasMore, nil
 }
 
 // 获取帖子详情

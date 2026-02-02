@@ -18,6 +18,7 @@ type Post struct {
 	Description string    `json:"description"`
 	UserNick    string    `json:"user_nick"`
 	Signature   string    `json:"signature"`
+	CoverURL    string    `json:"cover_url"`
 	ImageCount  int       `json:"image_count"`
 	Images      []string  `json:"images,omitempty"`
 	CreatedAt   time.Time `json:"created_at"`
@@ -53,6 +54,7 @@ func (d *DB) initTables() {
 			description TEXT,
 			user_nick TEXT,
 			signature TEXT,
+			cover_url TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
@@ -94,9 +96,9 @@ func (d *DB) SavePost(post *Post, images []string) error {
 
 	// 插入帖子
 	_, err = tx.Exec(
-		`INSERT INTO posts (post_id, title, description, user_nick, signature, updated_at) 
-		 VALUES (?, ?, ?, ?, ?, ?)`,
-		post.ID, post.Title, post.Description, post.UserNick, post.Signature, time.Now(),
+		`INSERT INTO posts (post_id, title, description, user_nick, signature, cover_url, updated_at) 
+		 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		post.ID, post.Title, post.Description, post.UserNick, post.Signature, post.CoverURL, time.Now(),
 	)
 	if err != nil {
 		return err
@@ -117,7 +119,7 @@ func (d *DB) SavePost(post *Post, images []string) error {
 		return err
 	}
 
-	log.Printf("✅ 保存帖子: %s, 图片: %d张", post.ID, len(images))
+	log.Printf("✅ 保存帖子: %s, 封面: %s, 图片: %d张", post.ID, post.CoverURL, len(images))
 	return nil
 }
 
@@ -134,7 +136,7 @@ func (d *DB) GetPosts(page, pageSize int) ([]Post, int, error) {
 
 	// 获取列表
 	rows, err := d.conn.Query(
-		`SELECT p.post_id, p.title, p.description, p.user_nick, p.signature, 
+		`SELECT p.post_id, p.title, p.description, p.user_nick, p.signature, p.cover_url,
 		        COUNT(i.id) as image_count, p.created_at
 		 FROM posts p
 		 LEFT JOIN images i ON p.post_id = i.post_id
@@ -152,7 +154,7 @@ func (d *DB) GetPosts(page, pageSize int) ([]Post, int, error) {
 	for rows.Next() {
 		var p Post
 		err := rows.Scan(&p.ID, &p.Title, &p.Description, &p.UserNick, 
-			&p.Signature, &p.ImageCount, &p.CreatedAt)
+			&p.Signature, &p.CoverURL, &p.ImageCount, &p.CreatedAt)
 		if err != nil {
 			continue
 		}
@@ -166,9 +168,9 @@ func (d *DB) GetPosts(page, pageSize int) ([]Post, int, error) {
 func (d *DB) GetPostWithImages(postID string) (*Post, error) {
 	var p Post
 	err := d.conn.QueryRow(
-		`SELECT post_id, title, description, user_nick, signature, created_at 
+		`SELECT post_id, title, description, user_nick, signature, cover_url, created_at 
 		 FROM posts WHERE post_id = ?`, postID,
-	).Scan(&p.ID, &p.Title, &p.Description, &p.UserNick, &p.Signature, &p.CreatedAt)
+	).Scan(&p.ID, &p.Title, &p.Description, &p.UserNick, &p.Signature, &p.CoverURL, &p.CreatedAt)
 	if err != nil {
 		return nil, err
 	}

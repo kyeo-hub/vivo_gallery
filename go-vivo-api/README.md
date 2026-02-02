@@ -57,6 +57,7 @@ Response:
       "description": "相册描述",
       "user_nick": "用户名",
       "signature": "签名",
+      "cover_url": "https://example.com/cover.jpg",
       "image_count": 5,
       "created_at": "2024-01-01T12:00:00Z"
     }
@@ -79,6 +80,7 @@ Response:
     "description": "相册描述",
     "user_nick": "用户名",
     "signature": "签名",
+    "cover_url": "https://example.com/cover.jpg",
     "image_count": 5,
     "images": [
       "https://example.com/image1.jpg",
