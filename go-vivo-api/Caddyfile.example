@@ -1,0 +1,6 @@
+# Caddy 配置示例
+# 假设你的 Caddy 已经运行在 Docker 网络 vivo-network 中
+
+vivo.yourdomain.com {
+    reverse_proxy vivo-api:8080
+}

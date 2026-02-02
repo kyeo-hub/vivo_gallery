@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  vivo-api:
+    build: .
+    container_name: vivo-api
+    restart: unless-stopped
+    environment:
+      - VIVO_USER_ID=${VIVO_USER_ID}
+      - PORT=8080
+    volumes:
+      - ./data:/data
+    networks:
+      - vivo-network
+    # 如果使用已有 Caddy，不映射端口，通过 caddy 反向代理
+    # ports:
+    #   - "8080:8080"
+
+networks:
+  vivo-network:
+    name: vivo-network
+    driver: bridge
