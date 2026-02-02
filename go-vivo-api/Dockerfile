@@ -10,8 +10,8 @@ RUN apk add --no-cache gcc musl-dev sqlite-dev
 WORKDIR /app
 
 # 复制依赖文件
-COPY go.mod go.sum ./
-RUN go mod download
+COPY go.mod ./
+RUN go mod tidy && go mod download
 
 # 复制源代码
 COPY . .
