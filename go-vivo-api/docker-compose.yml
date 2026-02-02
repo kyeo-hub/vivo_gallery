@@ -9,12 +9,12 @@ services:
     volumes:
       - ./data:/data
     networks:
-      - vivo-network
+      my-network:
+        ipv4_address: 192.168.0.8
+networks:
+  my-network:
+    external: true
     # 如果使用已有 Caddy，不映射端口，通过 caddy 反向代理
     # ports:
     #   - "8080:8080"
 
-networks:
-  vivo-network:
-    name: vivo-network
-    driver: bridge

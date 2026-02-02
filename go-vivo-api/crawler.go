@@ -16,12 +16,12 @@ type VivoCrawler struct {
 }
 
 type VivoPost struct {
-	PostID    string   `json:"postId"`
-	Title     string   `json:"postTitle"`
-	Desc      string   `json:"postDesc"`
-	UserNick  string   `json:"userNick"`
-	Signature string   `json:"signature"`
-	Images    []string `json:"images"`
+	PostID    json.Number `json:"postId"`
+	Title     string      `json:"postTitle"`
+	Desc      string      `json:"postDesc"`
+	UserNick  string      `json:"userNick"`
+	Signature string      `json:"signature"`
+	Images    []string    `json:"images"`
 }
 
 func NewVivoCrawler(userID string, db *DB) *VivoCrawler {
@@ -76,10 +76,10 @@ func (c *VivoCrawler) Sync() error {
 			log.Printf("❌ 获取帖子 %s 失败: %v", id, err)
 			continue
 		}
-
+	
 		// 转换并保存
 		dbPost := &Post{
-			ID:          post.PostID,
+			ID:          post.PostID.String(),
 			Title:       post.Title,
 			Description: post.Desc,
 			UserNick:    post.UserNick,
@@ -87,7 +87,7 @@ func (c *VivoCrawler) Sync() error {
 		}
 
 		if err := c.db.SavePost(dbPost, post.Images); err != nil {
-			log.Printf("❌ 保存帖子 %s 失败: %v", id, err)
+			log.Printf("❌ 保存帖子 %s 失败: %v", post.PostID.String(), err)
 			continue
 		}
 
@@ -161,7 +161,7 @@ func (c *VivoCrawler) fetchPage(pageNo int) ([]string, bool, error) {
 	var result struct {
 		Data struct {
 			Posts []struct {
-				PostID string `json:"postId"`
+				PostID json.Number `json:"postId"`
 			} `json:"posts"`
 		} `json:"data"`
 	}
@@ -172,7 +172,7 @@ func (c *VivoCrawler) fetchPage(pageNo int) ([]string, bool, error) {
 
 	var ids []string
 	for _, p := range result.Data.Posts {
-		ids = append(ids, p.PostID)
+		ids = append(ids, p.PostID.String())
 	}
 
 	hasMore := len(ids) > 0
@@ -216,3 +216,4 @@ func (c *VivoCrawler) fetchPostDetail(postID string) (*VivoPost, error) {
 
 	return &result.Data.Post, nil
 }
+
