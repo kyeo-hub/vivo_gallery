@@ -9,6 +9,10 @@ RUN apk add --no-cache gcc musl-dev sqlite-dev
 
 WORKDIR /app
 
+# 设置国内 Go 模块代理
+ENV GOPROXY=https://goproxy.cn,direct
+ENV GO111MODULE=on
+
 # 复制所有文件
 COPY . .
 
