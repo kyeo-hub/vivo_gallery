@@ -9,12 +9,11 @@ RUN apk add --no-cache gcc musl-dev sqlite-dev
 
 WORKDIR /app
 
-# 复制依赖文件
-COPY go.mod ./
-RUN go mod tidy && go mod download
-
-# 复制源代码
+# 复制所有文件
 COPY . .
+
+# 下载依赖
+RUN go mod tidy && go mod download
 
 # 编译静态二进制
 RUN CGO_ENABLED=1 GOOS=linux go build -a -ldflags '-linkmode external -extldflags "-static"' -o vivo-api
